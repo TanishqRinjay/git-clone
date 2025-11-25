@@ -408,7 +408,8 @@ class Repository:
                 if file_path.is_file():
                     file_path.unlink()
                 elif file_path.is_dir():
-                    file_path.rmdir()
+                    if not any(file_path.iterdir()):
+                        file_path.rmdir()
             except Exception as e:
                 print(f"Warning: could not remove file {file_path}: {e}")
                 pass
