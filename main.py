@@ -146,7 +146,7 @@ class Repository:
         self.heads_dir.mkdir()
 
         # Create initial head pointing to a branch
-        self.head_file.write_text("refs: refs/heads/master\n")
+        self.head_file.write_text("ref: refs/heads/master\n")
         self.index_file.write_text(json.dumps({}, indent=2))
 
         print(f"Initialize empty git repository in {self.git_dir}")
