@@ -72,3 +72,12 @@ Clone the repository:
 ```bash
 git clone https://github.com/TanishqRinjay/git-clone.git
 cd gitpy
+
+# Run the program
+python main.py init
+python main.py add .
+python main.py commit -m "Initial commit"
+.
+.
+... other commands
+```
