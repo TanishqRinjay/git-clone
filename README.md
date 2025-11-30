@@ -32,6 +32,32 @@ This project is a deep dive into the system design principles that underpin dist
 * **Recursive Tree Building:** Demonstrates the algorithm required to convert a flat "staging index" into a nested hierarchy of Tree objects for permanent storage.
 
 ---
+## Architectural Diagram
+
+### 🔑 Key Components & Roles
+Here is a one-line explanation for the core Git objects implemented in our Python classes:
+
+* Blob (B1, B2): A Blob is a single, immutable, compressed chunk of file content, named by the SHA-1 hash of its content.
+* Tree (T_Root, T_Sub): A Tree is a directory listing that maps filenames to the hashes of Blobs or other Trees.
+* Commit (C1, C2): A Commit is a snapshot of the entire repository state, containing metadata (author, message) and pointing to the hash of the single top-level Tree object.
+* Staging Index: A temporary file (in our case, a JSON file) that stores the mapping between the file paths in the working directory and the Blob hashes destined for the next commit.
+* Refs: Simple files (like refs/heads/master) that store the SHA-1 hash of the most recent Commit in a branch.
+
+### ⚙️ How the Diagram Works
+The diagram illustrates two crucial architectural concepts at the heart of Git and our GitPy implementation: the Directed Acyclic Graph (DAG) and the Merkle Tree.
+
+* Workflow & Indexing: The flow begins when the Controller (RepoClass) reads the Working Directory (WD) files via repo.add(). The file content is converted into a Blob, stored in the database, and the path-to-hash mapping is written to the Index.
+* Commit & Merkle Tree: When repo.commit() is called, the Controller reads the Index. It executes the recursive logic to convert the flat Index into nested Tree objects (the Merkle Tree). The Root Tree (T_Root) points to all files (Blobs) and sub-directories (Sub-Trees). The Commit (C2) object is then created, which points only to the single hash of the Root Tree, creating an immutable snapshot of the entire project state.
+* The DAG (History): The Commit (C2) doesn't just point to a Tree; it also points to its parent commit (C1). This links all commits sequentially, forming the DAG—a linear history that prevents changes from being lost or accidentally overwritten, ensuring full traceability.
+* Tracking State (Refs): Finally, the Controller updates the Branch Ref (MasterRef) file to store the hash of the new Commit (C2). This simple file acts as the pointer for the entire branch, telling Git which Commit is currently the head of the branch.
+
+This architecture ensures that every version of the repository is cryptographically verifiable, as any change to a file would change its Blob hash, which would change the Tree hash, which would change the Commit hash.
+
+![Architectural Diagram](image.png)
+
+> 💡 **Pro Tip for VS Code Visualization:**
+>
+> If you globally change all instances of `.gitpy` to `.git` in your Python code, your repository folder will be recognized by VS Code (and other Git tools) as it uses same compression techniques as official git. This allows you to use Git extensions to visualize the **Commit Graph** and **Branch History** that your project generates!
 
 ## 🛠️ Setup and Usage
 
