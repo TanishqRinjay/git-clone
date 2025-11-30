@@ -1,3 +1,4 @@
+from __future__ import annotations
 import hashlib
 import time
 import zlib
@@ -17,7 +18,7 @@ class GitObject:
         return zlib.compress(header + self.content)
 
     @classmethod
-    def deserialize(cls, data: bytes) -> 'GitObject':
+    def deserialize(cls, data: bytes) -> GitObject:
         decompressed = zlib.decompress(data)
         null_idx = decompressed.find(b"\0")
         header = decompressed[:null_idx].decode()
@@ -48,7 +49,7 @@ class Tree(GitObject):
         self.content = self._serialize_entries()
 
     @classmethod
-    def from_content(cls, content: bytes) -> 'Tree':
+    def from_content(cls, content: bytes) -> Tree:
         tree = cls()
         i = 0
         while i < len(content):
@@ -85,7 +86,7 @@ class Commit(GitObject):
         return "\n".join(lines).encode()
 
     @classmethod
-    def from_content(cls, content: bytes) -> 'Commit':
+    def from_content(cls, content: bytes) -> Commit:
         lines = content.decode().split("\n")
         tree_hash = None
         parent_hashes = []

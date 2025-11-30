@@ -1,5 +1,4 @@
-
-from GitObject import GitObject, Blob, Tree, Commit
+from src.GitObject import GitObject, Blob, Tree, Commit
 from pathlib import Path
 from typing import Dict
 import json
