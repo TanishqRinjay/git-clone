@@ -349,7 +349,7 @@ class Repository:
         previous_branch = self.get_current_branch()
         files_to_clear = set()
         try:
-            previous_commit_hash = self.get_branch_commit(previous_branch)
+            previous_commit_hash = self.get_branch_commit(previous_branch) 
             if previous_commit_hash:
                 prev_commit_object = self.load_object(previous_commit_hash)
                 prev_commit = Commit.from_content(prev_commit_object.content)
@@ -419,6 +419,50 @@ class Repository:
             self.restore_tree(target_commit.tree_hash, self.path)
         self.save_index({})
 
+    def branch(self, branch_name: str, delete: bool = False):
+        if delete and branch_name:
+            branch_file = self.heads_dir / branch_name
+            if branch_file.exists():
+                branch_file.unlink()
+                print(f"Deleted branch '{branch_name}'")
+            else:
+                print(f"Branch {branch_name} does not exists")
+            return
+        
+        current_branch = self.get_current_branch()
+        if branch_name:
+            current_commit = self.get_branch_commit(current_branch)
+            if current_commit:
+                self.set_branch_commit(branch_name, current_commit)
+                print(f"Created branch {branch_name}")
+            else:
+                print(f"No commits yet, cannot create a new branch")
+        else:
+            branches = []
+            for branch_file in self.heads_dir.iterdir():
+                if branch_file.is_file() and not branch_file.name.startswith("."):
+                    branches.append(branch_file.name)
+            for branch in sorted(branches):
+                if branch != current_branch:
+                    print(f"  {branch}")
+                else:
+                    print(f"* {branch}")
+            
+    def log(self, max_count: int):
+        current_branch = self.get_current_branch()
+        commit_hash = self.get_branch_commit(current_branch)
+        if not commit_hash:
+            return
+        count = 0
+        while commit_hash and count < max_count:
+            commit_obj = self.load_object(commit_hash)
+            commit = Commit.from_content(commit_obj.content)
+            print(f"commit {commit_hash}")
+            print(f"Author: {commit.author}")
+            print(f"Date: {time.ctime(commit.timestamp)}")
+            print(f"\n    {commit.message}\n")
+            commit_hash = commit.parent_hashes[0] if commit.parent_hashes else None
+            count += 1
 
 def main():
     parser = argparse.ArgumentParser(    
@@ -446,6 +490,18 @@ def main():
     checkout_parser = subparsers.add_parser("checkout", help="Move/create a new branch")
     checkout_parser.add_argument("-b", "--create-branch", action="store_true", help="Create a new branch")
     checkout_parser.add_argument("branch", help="Branch to checkout")
+
+    # list branches command
+    branch_parser = subparsers.add_parser("branch", help="List or manage the branches")
+    branch_parser.add_argument("name", nargs="?")
+    branch_parser.add_argument("-d", "--delete-branch", action="store_true", help="Delete a branch")
+
+    # log command
+    log_parser = subparsers.add_parser("log", help="Show commit history")
+    log_parser.add_argument("-n", "--max-count", type=int, default=10, help="Maximum number of commits to show")
+
+    # status command
+    status_parser = subparsers.add_parser("status", help="Shows repository status")
 
 
     args = parser.parse_args()
@@ -476,7 +532,21 @@ def main():
                 print("Not a git repository")
                 return
             repo.checkout(args.branch, args.create_branch)
-
+        elif args.command == "branch":
+            if not repo.git_dir.exists():
+                print("Not a git repository")
+                return
+            repo.branch(args.name, args.delete_branch)
+        elif args.command == "log":
+            if not repo.git_dir.exists():
+                print("Not a git repository")
+                return
+            repo.log(args.max_count)
+        elif args.command == "status":
+            if not repo.git_dir.exists():
+                print("Not a git repository")
+                return
+            repo.status()
 
     except Exception as e:
         print(f"Error in parsing args: {e}")
