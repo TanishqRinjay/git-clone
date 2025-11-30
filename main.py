@@ -542,13 +542,18 @@ class Repository:
         for file_path in working_files:
             if file_path in index:
                 if working_files[file_path] != index[file_path]:
-                    unstaged_files.append(file_path)
+                    unstaged_files.append(("modified file", file_path))
+
+        # Storing what files are deleted
+        for file_path in index:
+            if file_path not in working_files:
+                unstaged_files.append(("deleted file", file_path))
 
         # Printing files are modified but not staged
         if unstaged_files:
             print("\n Changes not staged for commit:")
-            for file_path in sorted(unstaged_files):
-                print(f"  modified: {file_path}")
+            for file_type, file_path in sorted(unstaged_files):
+                print(f"  {file_type}: {file_path}")
 
         # Storing what files are untracked
         for file_path in working_files:
@@ -561,16 +566,6 @@ class Repository:
             for file_path in sorted(untracked_files):
                 print(f"  {file_path}")
 
-        # Storing what files are deleted
-        for file_path in last_index_files:
-            if file_path not in index and file_path not in working_files:
-                deleted_files.append(file_path)
-
-        # Printing files are deleted
-        if deleted_files:
-            print("\n Deleted files:")
-            for file_path in sorted(deleted_files):
-                print(f"  {file_path}")
 
 def main():
     parser = argparse.ArgumentParser(    
